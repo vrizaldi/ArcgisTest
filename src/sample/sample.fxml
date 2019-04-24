@@ -1,6 +1,5 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.layout.StackPane?>
-<?import javafx.scene.layout.HBox?>
 <?import com.esri.arcgisruntime.mapping.view.SceneView?>
 
 <?import javafx.scene.layout.GridPane?>

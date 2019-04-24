@@ -37,7 +37,7 @@ public class Main extends Application {
     }
 
     public static void main(String[] args) {
-        ArcGISRuntimeEnvironment.setInstallDirectory("D:\\Docs\\1.Ilkomp UGM\\Organisasi dan Kepanitiaan\\Gamaforce\\ArcgisTest\\lib\\arcgis");
+        ArcGISRuntimeEnvironment.setInstallDirectory("lib\\arcgis");
 
         launch(args);
     }

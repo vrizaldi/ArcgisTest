@@ -12,7 +12,7 @@
     <children>
         <SceneView fx:id="view"/>
         <GridPane id="mainmenu" StackPane.alignment="TOP_LEFT"
-            minHeight="200" maxHeight="200" prefHeight="200"
+            minHeight="240" maxHeight="240" prefHeight="240"
             minWidth="500" maxWidth="500" prefWidth="500" vgap="5">
 
             <StackPane.margin>
@@ -26,21 +26,45 @@
                 <TextField fx:id="latitude_field" text="-7.797068"
                         minWidth="300" maxWidth="300" prefWidth="300"
                         GridPane.rowIndex="0" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
+
                 <Label text="Longitude: " labelFor="$longitude_field"
                         minWidth="100" maxWidth="100" prefWidth="100"
                         GridPane.rowIndex="1" GridPane.columnIndex="0"/>
                 <TextField fx:id="longitude_field" text="110.370529"
                         minWidth="300" maxWidth="300" prefWidth="300"
                         GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
+
                 <Label text="Altitude: " labelFor="$altitude_field"
                         minWidth="100" maxWidth="100" prefWidth="100"
                         GridPane.rowIndex="2" GridPane.columnIndex="0"/>
                 <TextField fx:id="altitude_field" text="200"
                         minWidth="300" maxWidth="300" prefWidth="300"
                         GridPane.rowIndex="2" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
-                <Button text="Move" onAction="#handleCoorChange"
+
+                <Label text="Heading: " labelFor="$heading_field"
+                        minWidth="100" maxWidth="100" prefWidth="100"
+                        GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                <TextField fx:id="heading_field" text="0"
+                        minWidth="300" maxWidth="300" prefWidth="300"
+                        GridPane.rowIndex="3" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
+
+                <Label text="Roll: " labelFor="$roll_field"
+                        minWidth="100" maxWidth="100" prefWidth="100"
+                        GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                <TextField fx:id="roll_field" text="0"
+                        minWidth="300" maxWidth="300" prefWidth="300"
+                        GridPane.rowIndex="4" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
+
+                <Label text="Pitch: " labelFor="$pitch_field"
+                        minWidth="100" maxWidth="100" prefWidth="100"
+                        GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+                <TextField fx:id="pitch_field" text="0"
+                        minWidth="300" maxWidth="300" prefWidth="300"
+                        GridPane.rowIndex="5" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
+
+                <Button text="Move" onAction="#handleChange"
                         minWidth="400" maxWidth="300" prefWidth="300"
-                        GridPane.rowIndex="3" GridPane.columnIndex="0" GridPane.columnSpan="4"/>
+                        GridPane.rowIndex="6" GridPane.columnIndex="0" GridPane.columnSpan="4"/>
             </children>
         </GridPane>
     </children>

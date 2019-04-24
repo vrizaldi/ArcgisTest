@@ -1,5 +1,5 @@
 #mainmenu {
     -fx-background-color: #ffffff;
-    -fx-padding: 50;
+    -fx-padding: 10 50 10 50;
     -fx-background-radius: 3px;
 }

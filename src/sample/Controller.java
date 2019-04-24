@@ -23,6 +23,9 @@ public class Controller implements Initializable {
     @FXML private TextField altitude_field;
     @FXML private TextField longitude_field;
     @FXML private TextField latitude_field;
+    @FXML private TextField heading_field;
+    @FXML private TextField pitch_field;
+    @FXML private TextField roll_field;
 
     private Graphic drone;
 
@@ -50,11 +53,8 @@ public class Controller implements Initializable {
         droneSymbol.setHeading(180);
 
         // initialise drone as graphics
-        double longitude = Double.valueOf(longitude_field.getText());
-        double latitude = Double.valueOf(latitude_field.getText());
-        double altitude = Double.valueOf(altitude_field.getText());
-        Point initialCoord = new Point(longitude, latitude, altitude, SpatialReferences.getWgs84());
-        drone = new Graphic(initialCoord, droneSymbol);
+
+        drone = new Graphic(getCurPos(), droneSymbol);
 
 
         // create renderer for drone
@@ -70,9 +70,7 @@ public class Controller implements Initializable {
         droneOverlay.getGraphics().add(drone);              // add drone to graphic overlay
         droneOverlay.setRenderer(droneRenderer);
 
-        drone.getAttributes().put("HEADING", 0);
-        drone.getAttributes().put("PITCH", 0);
-        drone.getAttributes().put("ROLL", 0);
+        updateDroneAtt();
 
         view.getGraphicsOverlays().add(droneOverlay);      // add graphic overlay to scene
     }
@@ -93,10 +91,24 @@ public class Controller implements Initializable {
         view.dispose();
     }
 
-    public void handleCoorChange(ActionEvent actionEvent) {
+    public void handleChange(ActionEvent actionEvent) {
+        drone.setGeometry(getCurPos());
+        updateDroneAtt();
+    }
+
+    private Point getCurPos() {
         double longitude = Double.valueOf(longitude_field.getText());
         double latitude = Double.valueOf(latitude_field.getText());
         double altitude = Double.valueOf(altitude_field.getText());
-        drone.setGeometry(new Point(longitude, latitude, altitude,SpatialReferences.getWgs84()));
+        return new Point(longitude, latitude, altitude,SpatialReferences.getWgs84());
+    }
+
+    private void updateDroneAtt() {
+        double heading = Double.valueOf(heading_field.getText());
+        double pitch = Double.valueOf(pitch_field.getText());
+        double roll = Double.valueOf(roll_field.getText());
+        drone.getAttributes().put("HEADING", heading);
+        drone.getAttributes().put("PITCH", pitch);
+        drone.getAttributes().put("ROLL", roll);
     }
 }

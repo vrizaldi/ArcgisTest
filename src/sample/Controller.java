@@ -53,7 +53,6 @@ public class Controller implements Initializable {
         droneSymbol.setHeading(180);
 
         // initialise drone as graphics
-
         drone = new Graphic(getCurPos(), droneSymbol);
 
 
@@ -87,16 +86,14 @@ public class Controller implements Initializable {
         view.setCameraController(cameraController);
     }
 
-    public void dispose() {
-        view.dispose();
-    }
-
     public void handleChange(ActionEvent actionEvent) {
+        // handle change in the drone's current state
         drone.setGeometry(getCurPos());
         updateDroneAtt();
     }
 
     private Point getCurPos() {
+        // return a Point as a representation of the drone's current position
         double longitude = Double.valueOf(longitude_field.getText());
         double latitude = Double.valueOf(latitude_field.getText());
         double altitude = Double.valueOf(altitude_field.getText());
@@ -104,11 +101,17 @@ public class Controller implements Initializable {
     }
 
     private void updateDroneAtt() {
+        // update the drone's heading, pitch and roll
         double heading = Double.valueOf(heading_field.getText());
         double pitch = Double.valueOf(pitch_field.getText());
         double roll = Double.valueOf(roll_field.getText());
         drone.getAttributes().put("HEADING", heading);
         drone.getAttributes().put("PITCH", pitch);
         drone.getAttributes().put("ROLL", roll);
+    }
+
+
+    public void dispose() {
+        view.dispose();
     }
 }

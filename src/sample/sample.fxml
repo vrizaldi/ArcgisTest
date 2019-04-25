@@ -22,46 +22,46 @@
                 <Label text="Latitude: " labelFor="$latitude_field"
                         minWidth="100" maxWidth="100" prefWidth="100"
                         GridPane.rowIndex="0" GridPane.columnIndex="0" />
-                <TextField fx:id="latitude_field" text="-7.797068"
+                <TextField fx:id="latitude_field"
                         minWidth="300" maxWidth="300" prefWidth="300"
                         GridPane.rowIndex="0" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
 
                 <Label text="Longitude: " labelFor="$longitude_field"
                         minWidth="100" maxWidth="100" prefWidth="100"
                         GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                <TextField fx:id="longitude_field" text="110.370529"
+                <TextField fx:id="longitude_field"
                         minWidth="300" maxWidth="300" prefWidth="300"
                         GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
 
                 <Label text="Altitude: " labelFor="$altitude_field"
                         minWidth="100" maxWidth="100" prefWidth="100"
                         GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                <TextField fx:id="altitude_field" text="200"
+                <TextField fx:id="altitude_field"
                         minWidth="300" maxWidth="300" prefWidth="300"
                         GridPane.rowIndex="2" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
 
                 <Label text="Heading: " labelFor="$heading_field"
                         minWidth="100" maxWidth="100" prefWidth="100"
                         GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-                <TextField fx:id="heading_field" text="0"
+                <TextField fx:id="heading_field"
                         minWidth="300" maxWidth="300" prefWidth="300"
                         GridPane.rowIndex="3" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
 
                 <Label text="Roll: " labelFor="$roll_field"
                         minWidth="100" maxWidth="100" prefWidth="100"
                         GridPane.rowIndex="4" GridPane.columnIndex="0"/>
-                <TextField fx:id="roll_field" text="0"
+                <TextField fx:id="roll_field"
                         minWidth="300" maxWidth="300" prefWidth="300"
                         GridPane.rowIndex="4" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
 
                 <Label text="Pitch: " labelFor="$pitch_field"
                         minWidth="100" maxWidth="100" prefWidth="100"
                         GridPane.rowIndex="5" GridPane.columnIndex="0"/>
-                <TextField fx:id="pitch_field" text="0"
+                <TextField fx:id="pitch_field"
                         minWidth="300" maxWidth="300" prefWidth="300"
                         GridPane.rowIndex="5" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
 
-                <Button text="Move" onAction="#handleChange"
+                <Button text="Move" onAction="#handleModified"
                         minWidth="400" maxWidth="300" prefWidth="300"
                         GridPane.rowIndex="6" GridPane.columnIndex="0" GridPane.columnSpan="4"/>
                 <Button fx:id="interactive_toggler" text="Interactive mode: OFF" onAction="#toggleInteractive"

@@ -8,11 +8,12 @@ import com.esri.arcgisruntime.mapping.view.*;
 import com.esri.arcgisruntime.symbology.ModelSceneSymbol;
 import com.esri.arcgisruntime.geometry.Point;
 import com.esri.arcgisruntime.symbology.SimpleRenderer;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 
+import javax.swing.Timer;
 import java.io.File;
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -26,8 +27,14 @@ public class Controller implements Initializable {
     @FXML private TextField heading_field;
     @FXML private TextField pitch_field;
     @FXML private TextField roll_field;
+    @FXML private Button interactive_toggler;
+
+    private static final double DRONE_VELOCITY = 0.00001;
 
     private Graphic drone;
+    private boolean isInteractive;
+    private OrbitGeoElementCameraController cameraController;
+    private Timer interactiveUpdateTimer;
 
     @Override
     public void initialize(URL location, ResourceBundle resource) {
@@ -38,7 +45,7 @@ public class Controller implements Initializable {
     private void initScene() {
         // initialise arcgis scene
         ArcGISScene scene = new ArcGISScene(Basemap.createImagery());
-        view.setArcGISScene(scene);
+        this.view.setArcGISScene(scene);
         scene.getBaseSurface().getElevationSources().add(new ArcGISTiledElevationSource(
                 "http://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer"));
     }
@@ -53,7 +60,7 @@ public class Controller implements Initializable {
         droneSymbol.setHeading(180);
 
         // initialise drone as graphics
-        drone = new Graphic(getCurPos(), droneSymbol);
+        this.drone = new Graphic(getCurPos(), droneSymbol);
 
 
         // create renderer for drone
@@ -71,47 +78,135 @@ public class Controller implements Initializable {
 
         updateDroneAtt();
 
-        view.getGraphicsOverlays().add(droneOverlay);      // add graphic overlay to scene
+        this.view.getGraphicsOverlays().add(droneOverlay);      // add graphic overlay to scene
+
+        // set initial interactive mode accordingly
+        this.isInteractive = this.interactive_toggler.getText().split(" ")[2].compareTo("ON") == 0 ? true : false;
     }
 
     private void initCam() {
         initDrone();
         // set camera controller to orbit around drone
-        OrbitGeoElementCameraController cameraController =
+        this.cameraController =
                 new OrbitGeoElementCameraController(drone, 2);
-        cameraController.setCameraDistanceInteractive(false);
-        cameraController.setAutoHeadingEnabled(false);
-        cameraController.setAutoPitchEnabled(false);
-        cameraController.setAutoRollEnabled(false);
-        view.setCameraController(cameraController);
+        this.cameraController.setCameraDistanceInteractive(false);
+        this.cameraController.setAutoHeadingEnabled(false);
+        this.cameraController.setAutoPitchEnabled(false);
+        this.cameraController.setAutoRollEnabled(false);
+        this.view.setCameraController(this.cameraController);
     }
 
-    public void handleChange(ActionEvent actionEvent) {
+    public void handleChange() {
         // handle change in the drone's current state
-        drone.setGeometry(getCurPos());
+        this.drone.setGeometry(getCurPos());
         updateDroneAtt();
     }
 
     private Point getCurPos() {
         // return a Point as a representation of the drone's current position
-        double longitude = Double.valueOf(longitude_field.getText());
-        double latitude = Double.valueOf(latitude_field.getText());
-        double altitude = Double.valueOf(altitude_field.getText());
+        double longitude = Double.valueOf(this.longitude_field.getText());
+        double latitude = Double.valueOf(this.latitude_field.getText());
+        double altitude = Double.valueOf(this.altitude_field.getText());
         return new Point(longitude, latitude, altitude,SpatialReferences.getWgs84());
+    }
+
+    private void updateCurState(Point point, double heading, double pitch, double roll) {
+        this.latitude_field.setText(String.valueOf(point.getY()));
+        this.longitude_field.setText(String.valueOf(point.getX()));
+        this.altitude_field.setText(String.valueOf(point.getZ()));
+        this.heading_field.setText(String.valueOf(heading));
+        this.pitch_field.setText(String.valueOf(pitch));
+        this.roll_field.setText(String.valueOf(roll));
     }
 
     private void updateDroneAtt() {
         // update the drone's heading, pitch and roll
-        double heading = Double.valueOf(heading_field.getText());
-        double pitch = Double.valueOf(pitch_field.getText());
-        double roll = Double.valueOf(roll_field.getText());
-        drone.getAttributes().put("HEADING", heading);
-        drone.getAttributes().put("PITCH", pitch);
-        drone.getAttributes().put("ROLL", roll);
+        double heading = this.getHeading();
+        double pitch = this.getPitch();
+        double roll = this.getRoll();
+        this.drone.getAttributes().put("HEADING", heading);
+        this.drone.getAttributes().put("PITCH", pitch);
+        this.drone.getAttributes().put("ROLL", roll);
+    }
+
+    private double getHeading() {
+        return Double.valueOf(this.heading_field.getText());
+    }
+
+    private double getPitch() {
+        return Double.valueOf(this.pitch_field.getText());
+    }
+
+    private double getRoll() {
+        return Double.valueOf(this.roll_field.getText());
     }
 
 
     public void dispose() {
-        view.dispose();
+       this.view.dispose();
+    }
+
+    public void toggleInteractive() {
+        this.isInteractive = !this.isInteractive;
+
+        // toggle text on the button
+        this.interactive_toggler.setText("Interactive mode: " + (this.isInteractive ? "ON" : "OFF"));
+
+        if(isInteractive) {
+            // if interactive mode is turned on
+            // set cam to follow heading, pitch, and roll of the drone
+            this.cameraController.setCameraHeadingOffsetInteractive(false);
+            this.cameraController.setCameraPitchOffsetInteractive(false);
+            this.cameraController.setCameraPitchOffset(90);
+            this.cameraController.setAutoHeadingEnabled(true);
+            this.cameraController.setAutoPitchEnabled(true);
+            this.cameraController.setAutoRollEnabled(true);
+
+            // set timer to update drone state 1/30 second
+            this.interactiveUpdateTimer = new Timer(1000/30,
+                    (e) -> {
+                        Point curPos = getCurPos();
+                        Point newPos = new Point(
+                                curPos.getX() + calcXVelocity(this.getHeading(), this.getPitch()),
+                                curPos.getY() + calcYVelocity(this.getHeading(), this.getPitch()),
+                                curPos.getZ() + calcZVelocity(this.getPitch()),
+                                SpatialReferences.getWgs84());
+                        drone.setGeometry(newPos);
+                        updateCurState(newPos, this.getHeading(), this.getPitch(), this.getRoll());
+                    });
+            this.interactiveUpdateTimer.setRepeats(true);
+            this.interactiveUpdateTimer.start();
+
+        } else {
+            // if interactive mode is turned on
+            // stop moving plane / update
+            if(this.interactiveUpdateTimer != null) this.interactiveUpdateTimer.stop();
+
+            // allow camera to move around
+            this.cameraController.setCameraHeadingOffsetInteractive(true);
+            this.cameraController.setCameraPitchOffsetInteractive(true);
+            this.cameraController.setAutoHeadingEnabled(false);
+            this.cameraController.setAutoPitchEnabled(false);
+            this.cameraController.setAutoRollEnabled(false);
+        }
+    }
+
+    private static double calcXVelocity(double heading, double pitch) {
+        double headingRad = Math.toRadians(heading);
+        double pitchRad = Math.toRadians(pitch);
+        System.out.println("X velocity: " + DRONE_VELOCITY + Math.sin(headingRad));
+        return DRONE_VELOCITY * Math.cos(pitchRad) * Math.sin(headingRad);
+    }
+
+    private static double calcYVelocity(double heading, double pitch) {
+        double headingRad = Math.toRadians(heading);
+        double pitchRad = Math.toRadians(pitch);
+        System.out.println("Y velocity: " + DRONE_VELOCITY + Math.cos(headingRad));
+        return DRONE_VELOCITY * Math.cos(pitchRad) * Math.cos(headingRad);
+    }
+
+    private static double calcZVelocity(double pitch) {
+        double pitchRad = Math.toRadians(pitch);
+        return DRONE_VELOCITY * Math.sin(pitchRad);
     }
 }

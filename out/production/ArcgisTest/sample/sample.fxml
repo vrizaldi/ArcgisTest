@@ -1,6 +1,5 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.layout.StackPane?>
-<?import javafx.scene.layout.HBox?>
 <?import com.esri.arcgisruntime.mapping.view.SceneView?>
 
 <?import javafx.scene.layout.GridPane?>
@@ -65,6 +64,9 @@
                 <Button text="Move" onAction="#handleChange"
                         minWidth="400" maxWidth="300" prefWidth="300"
                         GridPane.rowIndex="6" GridPane.columnIndex="0" GridPane.columnSpan="4"/>
+                <Button fx:id="interactive_toggler" text="Interactive mode: OFF" onAction="#toggleInteractive"
+                        minWidth="400" maxWidth="300" prefWidth="300"
+                        GridPane.rowIndex="7" GridPane.columnIndex="0" GridPane.columnSpan="4"/>
             </children>
         </GridPane>
     </children>

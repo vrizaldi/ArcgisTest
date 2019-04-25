@@ -11,8 +11,6 @@ import javafx.stage.Stage;
 
 
 public class Main extends Application {
-    @FXML
-    private MapView view;
 
     private Controller controller;
 

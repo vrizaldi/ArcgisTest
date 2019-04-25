@@ -18,10 +18,12 @@ public class Main extends Application {
     public void start(Stage primaryStage) throws Exception{
         FXMLLoader loader =  new FXMLLoader(getClass().getResource("sample.fxml"));
         Parent root = loader.load();
+        Scene scene = new Scene(root, 600, 350);
         controller = loader.getController();
+        controller.setFXScene(scene);
 
         primaryStage.setTitle("Hello World");
-        primaryStage.setScene(new Scene(root, 600, 350));
+        primaryStage.setScene(scene);
         primaryStage.setFullScreen(true);
         primaryStage.show();
     }

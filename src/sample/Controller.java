@@ -11,8 +11,10 @@ import com.esri.arcgisruntime.symbology.SimpleRenderer;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyEvent;
 
 import javax.swing.Timer;
 import java.io.File;
@@ -33,6 +35,13 @@ public class Controller implements Initializable {
     @FXML private Button interactive_toggler;
 
     private static final double DRONE_VELOCITY = 0.00001;
+    private static final double Z_VELOCITY_MULT = 100000;
+    private static final double PITCH_CHANGE = 1;
+    private static final double ROLL_CHANGE = 4;
+    private static final double CAM_DISTANCE = 2;
+    private static final float CAM_MOVEMENT_DUR = 1;
+
+    private Scene fxscene;
 
     private Graphic drone;
 
@@ -46,7 +55,7 @@ public class Controller implements Initializable {
     private OrbitGeoElementCameraController cameraController;
     private boolean isInteractive;
     private Timer interactiveUpdateTimer;
-
+    private Timer camNormaliserTimer;
 
     @Override
     public void initialize(URL location, ResourceBundle resource) {
@@ -75,7 +84,7 @@ public class Controller implements Initializable {
                 .getAbsolutePath();
         ModelSceneSymbol droneSymbol = new ModelSceneSymbol(modelURI, 30);
         droneSymbol.loadAsync();
-        droneSymbol.setHeading(180);
+        droneSymbol.setHeading(180);    // model heading is inverted
 
         // initialise drone as graphics
         this.drone = new Graphic(new Point(0,0,0), droneSymbol);
@@ -106,12 +115,35 @@ public class Controller implements Initializable {
         initDrone();
         // set camera controller to orbit around drone
         this.cameraController =
-                new OrbitGeoElementCameraController(drone, 2);
-        this.cameraController.setCameraDistanceInteractive(false);
+                new OrbitGeoElementCameraController(drone, CAM_DISTANCE);
+        this.view.setCameraController(this.cameraController);
+
+        this.camNormaliserTimer = new Timer(1000/30,
+                (e) -> {
+                    double curHeading = this.cameraController.getCameraHeadingOffset();
+                    double curPitch = this.cameraController.getCameraPitchOffset();
+
+                    Platform.runLater(() -> {
+                        if(curHeading - this.heading > 5) {
+                            this.cameraController.setCameraHeadingOffset(curHeading - 0.4);
+                        } else if(curHeading - this.heading < -5) {
+                            this.cameraController.setCameraHeadingOffset(curHeading + 0.4);
+                        }
+
+                        if(curPitch - 90 - this.pitch > 5) {
+                            this.cameraController.setCameraPitchOffset(curPitch - 0.5);
+                        } else if(curPitch - 90 - this.pitch < -5) {
+                             this.cameraController.setCameraPitchOffset(curPitch + 0.5);
+                        }
+                    });
+                }
+            );
+
+        // set auto heading, pitch, and roll
         this.cameraController.setAutoHeadingEnabled(false);
         this.cameraController.setAutoPitchEnabled(false);
         this.cameraController.setAutoRollEnabled(false);
-        this.view.setCameraController(this.cameraController);
+        setInteractivity(false);
     }
 
     public void handleModified() {
@@ -183,16 +215,8 @@ public class Controller implements Initializable {
 
         if(isInteractive) {
             // if interactive mode is turned on
-            // set cam to follow heading, pitch, and roll of the drone
-            this.cameraController.setCameraHeadingOffsetInteractive(false);
-            this.cameraController.setCameraPitchOffsetInteractive(false);
-            this.cameraController.setCameraPitchOffset(90);
-            this.cameraController.setCameraHeadingOffset(0);
-            this.cameraController.setAutoHeadingEnabled(true);
-            this.cameraController.setAutoPitchEnabled(true);
-            this.cameraController.setAutoRollEnabled(true);
-
             // set timer to update drone state 1/30 second
+            setInteractivity(true);
             this.interactiveUpdateTimer = new Timer(1000/30,
                     (e) -> {
                         // UI changes must be done on main thread
@@ -212,12 +236,50 @@ public class Controller implements Initializable {
             // stop moving plane / update
             if(this.interactiveUpdateTimer != null) this.interactiveUpdateTimer.stop();
 
-            // allow camera to move around
-            this.cameraController.setCameraHeadingOffsetInteractive(true);
-            this.cameraController.setCameraPitchOffsetInteractive(true);
-            this.cameraController.setAutoHeadingEnabled(false);
-            this.cameraController.setAutoPitchEnabled(false);
-            this.cameraController.setAutoRollEnabled(false);
+            setInteractivity(false);
+        }
+    }
+
+    private void setInteractivity(boolean isInteractive) {
+        // toggle control for interactive / non interactive mode
+        this.cameraController.setCameraHeadingOffsetInteractive(!isInteractive);
+        this.cameraController.setCameraPitchOffsetInteractive(!isInteractive);
+        if(isInteractive) {
+            this.camNormaliserTimer.start();
+        } else {
+            this.camNormaliserTimer.stop();
+        }
+
+        enableDroneControl(isInteractive);
+    }
+
+    private void enableDroneControl(boolean isEnabled) {
+        if(isEnabled) {
+            fxscene.addEventFilter(KeyEvent.KEY_PRESSED,
+                (e) -> {
+                    double pitchChange = calcPitchChange(roll);
+                    double headingChange = calcHeadingChange(roll);
+                    switch(e.getCode()) {
+                    case W:
+                        this.pitch -= pitchChange;
+                        this.heading -= headingChange;
+                        break;
+                    case A:
+                        this.roll -= ROLL_CHANGE;
+                        break;
+                    case S:
+                        this.pitch += pitchChange;
+                        this.heading += headingChange;
+                        break;
+                    case D:
+                        this.roll += ROLL_CHANGE;
+                        break;
+                    }
+
+                    this.updateModelFromState();
+                }
+            );
+        } else {
         }
     }
 
@@ -235,11 +297,30 @@ public class Controller implements Initializable {
 
     private static double calcZVelocity(double pitch) {
         double pitchRad = Math.toRadians(pitch);
-        return DRONE_VELOCITY * Math.sin(pitchRad);
+        return Z_VELOCITY_MULT * DRONE_VELOCITY * Math.sin(pitchRad);
+    }
+
+    private static double calcPitchChange(double roll) {
+        double rollRad = Math.toRadians(roll);
+        return PITCH_CHANGE * Math.cos(rollRad);
+    }
+
+    private static double calcHeadingChange(double roll) {
+        double rollRad = Math.toRadians(roll);
+        return PITCH_CHANGE * Math.sin(rollRad);
+    }
+
+
+    /**
+     * to be called by main
+     */
+    public void setFXScene(Scene fxscene) {
+        this.fxscene = fxscene;
     }
 
     public void dispose() {
        this.view.dispose();
        if(this.interactiveUpdateTimer != null) this.interactiveUpdateTimer.stop();
+       if(this.camNormaliserTimer != null) this.camNormaliserTimer.stop();
     }
 }

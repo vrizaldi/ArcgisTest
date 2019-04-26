@@ -21,6 +21,8 @@ import java.io.File;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import static javafx.scene.input.KeyCode.*;
+
 public class Controller implements Initializable {
 
     @FXML private SceneView view;
@@ -118,22 +120,28 @@ public class Controller implements Initializable {
                 new OrbitGeoElementCameraController(drone, CAM_DISTANCE);
         this.view.setCameraController(this.cameraController);
 
+        // initialise cam normaliser to make cam follow drone gradually
         this.camNormaliserTimer = new Timer(1000/30,
                 (e) -> {
                     double curHeading = this.cameraController.getCameraHeadingOffset();
                     double curPitch = this.cameraController.getCameraPitchOffset();
 
                     Platform.runLater(() -> {
-                        if(curHeading - this.heading > 5) {
-                            this.cameraController.setCameraHeadingOffset(curHeading - 0.4);
+                        // if the difference between the headings are too big
+                        // swing cam's heading
+                        double diffHeading = curHeading - this.heading;
+                        if(diffHeading > 5) {
+                            this.cameraController.setCameraHeadingOffset(curHeading - diffHeading * 0.01);
                         } else if(curHeading - this.heading < -5) {
-                            this.cameraController.setCameraHeadingOffset(curHeading + 0.4);
+                            this.cameraController.setCameraHeadingOffset(curHeading - diffHeading * 0.01);
                         }
 
-                        if(curPitch - 90 - this.pitch > 5) {
-                            this.cameraController.setCameraPitchOffset(curPitch - 0.5);
-                        } else if(curPitch - 90 - this.pitch < -5) {
-                             this.cameraController.setCameraPitchOffset(curPitch + 0.5);
+                        // do the same with the pitch
+                        double diffPitch = curPitch - 90 - this.pitch;
+                        if(diffPitch > 5) {
+                            this.cameraController.setCameraPitchOffset(curPitch - diffPitch * 0.03);
+                        } else if(diffPitch < -5) {
+                             this.cameraController.setCameraPitchOffset(curPitch - diffPitch * 0.03);
                         }
                     });
                 }
@@ -259,21 +267,18 @@ public class Controller implements Initializable {
                 (e) -> {
                     double pitchChange = calcPitchChange(roll);
                     double headingChange = calcHeadingChange(roll);
-                    switch(e.getCode()) {
-                    case W:
+                    if(e.getCode() == W) {
                         this.pitch -= pitchChange;
                         this.heading -= headingChange;
-                        break;
-                    case A:
-                        this.roll -= ROLL_CHANGE;
-                        break;
-                    case S:
+                    } else if(e.getCode() == S) {
                         this.pitch += pitchChange;
                         this.heading += headingChange;
-                        break;
-                    case D:
+                    }
+
+                    if (e.getCode() == A) {
+                        this.roll -= ROLL_CHANGE;
+                    } else if(e.getCode() == D) {
                         this.roll += ROLL_CHANGE;
-                        break;
                     }
 
                     this.updateModelFromState();

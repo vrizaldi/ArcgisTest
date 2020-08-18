@@ -82,7 +82,7 @@ public class Controller implements Initializable {
 
         // load drone model from resource
         String modelURI = new File(
-                "resource\\drone.3ds")
+                "resource/drone.3ds")
                 .getAbsolutePath();
         ModelSceneSymbol droneSymbol = new ModelSceneSymbol(modelURI, 30);
         droneSymbol.loadAsync();

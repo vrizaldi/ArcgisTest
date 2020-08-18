@@ -34,7 +34,7 @@ public class Main extends Application {
     }
 
     public static void main(String[] args) {
-        ArcGISRuntimeEnvironment.setInstallDirectory("lib\\arcgis");
+        ArcGISRuntimeEnvironment.setInstallDirectory("lib/arcgis");
 
         launch(args);
     }
